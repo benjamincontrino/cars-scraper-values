@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+rsconnect/
+data/
+data-raw/
+*.log
+*.csv
