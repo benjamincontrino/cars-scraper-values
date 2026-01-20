@@ -441,6 +441,7 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
   cars_data <- bind_cols(predict(rf_model, cars_data), cars_data) %>%
     dplyr::rename(predicted_price = .pred) %>%
     mutate(price_over_expectation = price - predicted_price) %>%
+    arrange(price_over_expectation) %>%
     dplyr::select(make, model, model_clean, year, miles, new_or_used, dealer_name, dealer_location, price, predicted_price, price_over_expectation)
   
   # ============================================

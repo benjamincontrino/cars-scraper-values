@@ -15,5 +15,5 @@ Imports:
     tidymodels,
     ranger,
     DT,
-    shiny
+    shiny,
     bslib

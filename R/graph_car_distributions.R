@@ -11,14 +11,7 @@ plot_make_prices <- function(new_or_used_input, make_input) {
   rm(df)
   gc()
   
-  # Input validation
-  if (!new_or_used_input %in% c("New", "Used")) {
-    stop("new_or_used_input must be either 'New' or 'Used'")
-  }
-  
-  if (!make_input %in% unique(df$make)) {
-    stop(paste("make_input must be one of:", paste(unique(df$make), collapse=", ")))
-  }
+ 
   
   # Filter data based on input
   filtered_data <- make_df %>%
