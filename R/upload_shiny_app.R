@@ -284,7 +284,7 @@ upload_shiny_app <- function() {
                     inputId = "max_pages",
                     label = "Number of Pages to Scrape:",
                     min = 1,
-                    max = 20,
+                    max = 25,
                     value = 5,
                     step = 1
                   ),
