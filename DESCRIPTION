@@ -14,4 +14,6 @@ Imports:
     stringr,
     tidymodels,
     ranger,
-    DT
+    DT,
+    shiny
+    bslib

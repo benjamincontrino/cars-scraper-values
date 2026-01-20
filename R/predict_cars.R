@@ -468,7 +468,10 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
       autoWidth = TRUE,
       searchHighlight = TRUE,             # Highlight search terms
       dom = 'Bfrtip',                     # Layout: Buttons, filter, table, info, pagination
-      paging = FALSE                      # Disable pagination
+      paging = FALSE,                     # Disable pagination
+      columnDefs = list(                  # Center all columns
+        list(className = 'dt-center', targets = '_all')
+      )
     ),
     
     # Column names (prettier headers)
@@ -483,7 +486,7 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
       'Location', 
       'Price', 
       'Predicted Price', 
-      'Over/Under'
+      'Value?'
     ),
     
     # Make it filterable
@@ -535,14 +538,14 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
     # ============================================
   # ADDITIONAL STYLING
   # ============================================
- 
-    
-    # Format miles with commas
-    formatRound(
-      'miles',
-      digits = 0,
-      mark = ","
-    )
+  
+  
+  # Format miles with commas
+  formatRound(
+    'miles',
+    digits = 0,
+    mark = ","
+  )
   
   # ============================================
   # ALTERNATIVE: SAVE AS HTML FILE
