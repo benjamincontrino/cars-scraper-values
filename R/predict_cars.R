@@ -4,6 +4,7 @@
 # MAIN SCRAPING FUNCTION 
 # ============================================
 
+#' @export
 predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
   
   # Modify URL to get maximum results per page (100)

@@ -1,4 +1,5 @@
 
+#' @export
 update_car_prediction_model <- function() {
   
   # pre process data to help distributions

@@ -1,4 +1,5 @@
  
+#' @export
 plot_make_prices <- function(new_or_used_input, make_input) {
   
   df <- read.csv("data/cars_data_db.csv")
