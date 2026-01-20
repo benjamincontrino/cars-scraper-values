@@ -3,7 +3,5 @@
 .RData
 .Ruserdata
 rsconnect/
-data/
 data-raw/
 *.log
-*.csv
