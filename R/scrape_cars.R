@@ -1,4 +1,5 @@
-
+# the goal of this script is to scrape cars.com and save that dataset as a training set for future modeling
+# i then made a key for trims and makes to bin models together to help sample size issue (ex: RAV4XE, RAV4XLE, and RAV4Hybrid would all be RAV4)
 
 # ============================================
 # MAIN SCRAPING FUNCTION 

@@ -1,4 +1,5 @@
-
+# the goal of this script is to create a random forest to predict what a car price should be given certain independent variables
+# i had done this before and mixed effects models, xg, linear, nn were not as powerful as rf
 #' @export
 update_car_prediction_model <- function() {
   

@@ -1,4 +1,4 @@
-
+# similar to our scrape cars function, this time im taking in a url, and predicting what the price should be with our RF
 
 # ============================================
 # MAIN SCRAPING FUNCTION 

@@ -1,3 +1,5 @@
+# putting all of our information together into a dynamic shiny app where a user can enter their own cars.com search and i predict what cars are over/under priced
+#' @export
 upload_shiny_app <- function() {
   
   # Define UI
@@ -272,7 +274,7 @@ upload_shiny_app <- function() {
                padding: 25px; 
                margin-bottom: 30px; 
                box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);",
-      h1("Car Market Value Finder", 
+      h1("Car Market Value Analyzer", 
          style = "color: white; 
                   margin: 0; 
                   font-weight: 700; 
@@ -363,10 +365,13 @@ upload_shiny_app <- function() {
                     inputId = "make",
                     label = "Make:",
                     choices = c(
-                      "Acura",         "Alfa",          "Audi",          "Bmw",           "Buick",         "Cadillac",      "Chevrolet",     "Chrysler",      "Dodge",         "Ford",         
-                      "Genesis",       "Gmc",           "Honda",         "Hyundai",       "Infiniti",      "Jaguar",        "Jeep",          "Kia",           "Land",          "Lexus",        
-                      "Lincoln",       "Maserati",      "Mazda",         "Mercedes-Benz", "Mini",          "Mitsubishi",    "Nissan",        "Porsche",       "Subaru",        "Tesla",        
-                      "Toyota",        "Volkswagen",    "Volvo"
+                      "Acura", "Alfa", "Audi", "Bentley", "Bmw", "Buick", "Cadillac", 
+                      "Chevrolet", "Chrysler", "Dodge", "Fiat", "Fisker", "Ford", 
+                      "Genesis", "Gmc", "Honda", "Hyundai", "Ineos", "Infiniti", 
+                      "Jaguar", "Jeep", "Kia", "Land", "Lexus", "Lincoln", "Maserati", 
+                      "Mazda", "Mercedes-Benz", "Mini", "Mitsubishi", "Nissan", 
+                      "Polestar", "Porsche", "Rivian", "Subaru", "Tesla", "Toyota", 
+                      "Vinfast", "Volkswagen", "Volvo"
                     ),
                     selected = "Toyota"
                   )
@@ -376,17 +381,18 @@ upload_shiny_app <- function() {
           )
         ),
         
-        br(), 
+        br(),
+        br(),
         
         # Main panel with plots side by side
         fluidRow(
           column(
             width = 6,
-            plotOutput("distribution_plot_1", height = "400px")
+            plotOutput("distribution_plot_1", height = "500px")
           ),
           column(
             width = 6,
-            plotOutput("distribution_plot_2", height = "400px")
+            plotOutput("distribution_plot_2", height = "500px")
           )
         )
       ),
@@ -428,9 +434,7 @@ upload_shiny_app <- function() {
                     min = 1,
                     max = 25,
                     value = 5,
-                    step = NULL,  # Set to NULL to use ticks
-                    ticks = TRUE,
-                    animate = FALSE
+                    step = 1
                   ),
                   helpText("~100 cars per page. Each page adds ~10 seconds of run time.")
                 ),

@@ -1,3 +1,5 @@
+# the goal of this script is simply to see what makes and models are most/least expensive
+
 #' @export
 plot_make_prices <- function(new_or_used_input, make_input) {
   
