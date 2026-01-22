@@ -362,6 +362,9 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
   
   cars_data <- all_cars
   
+  
+  rm(all_cars, heading_node, dealer_node, page, page_data, parts, price_node, response, car_cards, car, car_data)
+  gc()
   # ============================================
   # CLEAN AND PROCESS DATA
   # ============================================
@@ -434,8 +437,7 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
     message("\nERROR: No data was collected. Check the website structure.")
   }
   
-  rm(all_cars)
-  gc()
+  
   
   rf_model <- readRDS("data/cars_rf_model.rds")[[1]]
   cars_data <- bind_cols(predict(rf_model, cars_data), cars_data) %>%
@@ -548,6 +550,8 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
     mark = ","
   )
   
+  rm(list = setdiff(ls(), "car_table"))
+  gc()
   # ============================================
   # ALTERNATIVE: SAVE AS HTML FILE
   # ============================================

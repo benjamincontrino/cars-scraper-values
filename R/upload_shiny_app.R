@@ -1,4 +1,3 @@
-
 upload_shiny_app <- function() {
   
   # Define UI
@@ -12,21 +11,47 @@ upload_shiny_app <- function() {
       primary = "#3b82f6",
       secondary = "#64748b",
       base_font = font_google("Inter"),
-      heading_font = font_google("Poppins"),
-      font_scale = 0.85  # Zoom out everything by 15%
+      heading_font = font_google("Poppins")
     ),
     
     # Custom CSS for additional styling
     tags$head(
       tags$style(HTML("
-      body {
-        zoom: 0.9;  /* Additional zoom out */
+      /* Animated gradient background */
+      @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
       }
       
-      /* Fix tab text visibility */
+      /* Smooth fade-in animation */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      /* Pulse animation for loading */
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+      
+      /* Spin animation for loading */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      body {
+        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        animation: fadeIn 0.6s ease;
+      }
+      
+      /* Fix tab text visibility with neon glow on active */
       .nav-link {
         color: #5a6c7d !important;
         font-weight: 500;
+        transition: all 0.3s ease;
       }
       
       .nav-link.active {
@@ -34,6 +59,7 @@ upload_shiny_app <- function() {
         background-color: rgba(59, 130, 246, 0.1) !important;
         border-bottom: 3px solid #3b82f6 !important;
         font-weight: 600;
+        box-shadow: 0 2px 15px rgba(59, 130, 246, 0.4);
       }
       
       .navbar {
@@ -41,19 +67,29 @@ upload_shiny_app <- function() {
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
       
+      /* Glass morphism for well panels */
       .well {
-        background-color: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 
+                    0 0 20px rgba(59, 130, 246, 0.1);
+        animation: fadeIn 0.8s ease;
       }
       
+      /* Glass morphism for about box */
       .about-box {
-        background: white;
-        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 16px;
         padding: 30px 40px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.07);
-        border: 1px solid #e9ecef;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+                    0 0 30px rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        animation: fadeIn 0.8s ease;
       }
       
       .about-box p {
@@ -79,18 +115,43 @@ upload_shiny_app <- function() {
         z-index: 10000 !important;
       }
       
+      /* Neon glow buttons with enhanced effects */
       .btn-primary {
         background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
         border: none;
-        border-radius: 6px;
-        padding: 10px 20px;
-        font-weight: 500;
-        transition: transform 0.2s;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4),
+                    0 0 20px rgba(59, 130, 246, 0.2);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s;
+      }
+      
+      .btn-primary:hover::before {
+        left: 100%;
       }
       
       .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6),
+                    0 0 40px rgba(59, 130, 246, 0.4);
+      }
+      
+      .btn-primary:active {
+        transform: translateY(-1px);
       }
       
       h2 {
@@ -98,14 +159,19 @@ upload_shiny_app <- function() {
         font-weight: 600;
       }
       
+      /* Enhanced input styling with glow on focus */
       .form-control, .form-select {
-        border-radius: 6px;
+        border-radius: 8px;
         border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
       }
       
       .form-control:focus, .form-select:focus {
         border-color: #3b82f6;
-        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15),
+                    0 0 20px rgba(59, 130, 246, 0.3);
+        transform: scale(1.01);
       }
       
       /* Make container fluid for full width */
@@ -114,29 +180,104 @@ upload_shiny_app <- function() {
         padding-right: 0 !important;
       }
       
-      /* Full width for DT table */
+      /* Full width for DT table with enhanced styling */
       #car_values_table {
         width: 100% !important;
+        animation: fadeIn 1s ease;
       }
       
       .dataTables_wrapper {
         width: 100% !important;
         padding: 20px;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+      }
+      
+      /* Enhanced table styling */
+      table.dataTable {
+        border-collapse: separate !important;
+        border-spacing: 0 4px !important;
+      }
+      
+      table.dataTable tbody tr {
+        background: white;
+        transition: all 0.3s ease;
+      }
+      
+      table.dataTable tbody tr:hover {
+        transform: scale(1.01);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        background: rgba(59, 130, 246, 0.05);
+      }
+      
+      table.dataTable thead th {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        color: white;
+        font-weight: 600;
+        padding: 15px 10px;
+        border: none;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      
+      /* Plot containers with hover effect */
+      .shiny-plot-output {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        background: white;
+        animation: fadeIn 0.8s ease;
+      }
+      
+      .shiny-plot-output:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+      }
+      
+      /* Loading spinner enhancement */
+      .shiny-busy-indicator {
+        background: linear-gradient(135deg, #3b82f6, #1e40af);
+        border-radius: 50%;
+        animation: spin 1s linear infinite, pulse 2s ease-in-out infinite;
+      }
+      
+      /* Slider styling */
+      .irs-bar {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+      }
+      
+      .irs-from, .irs-to, .irs-single {
+        background: #3b82f6;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+      }
+      
+      /* Help text styling */
+      .help-block {
+        font-style: italic;
+        font-size: 0.9em;
+        color: #64748b;
       }
     "))
     ),
     
-    # App title with styling
+    # App title with animated gradient styling
     div(
-      style = "background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); 
-             padding: 20px; 
-             margin-bottom: 30px; 
-             box-shadow: 0 2px 4px rgba(0,0,0,0.1);",
-      h1("Car Market Value Analyzer", 
+      style = "background: linear-gradient(135deg, #3b82f6, #1e40af, #6366f1, #3b82f6); 
+               background-size: 300% 300%;
+               animation: gradientShift 8s ease infinite;
+               padding: 25px; 
+               margin-bottom: 30px; 
+               box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);",
+      h1("Car Market Value Finder", 
          style = "color: white; 
-                margin: 0; 
-                font-weight: 600; 
-                font-size: 2rem;")
+                  margin: 0; 
+                  font-weight: 700; 
+                  font-size: 2.2rem;
+                  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);")
     ),
     
     # Tabset panel
@@ -182,7 +323,9 @@ upload_shiny_app <- function() {
               p("You may be more descriptive with your search, but at the minimum I would recommend 
               staying inside these parameters."),
               
-              p("Note: models and trims were binned together to help sample size. Example: RAV4LE, RAV4XLE, and RAV4Hybrid would all be binned to RAV4")
+              p("Note: models and trims were binned together to help sample size. Example: RAV4LE, RAV4XLE, and RAV4Hybrid would all be binned to RAV4"),
+              
+              p(paste0("Model last trained on ", readRDS("data/cars_rf_model.rds")[[2]]))
             )
           )
         )
@@ -220,13 +363,10 @@ upload_shiny_app <- function() {
                     inputId = "make",
                     label = "Make:",
                     choices = c(
-                      "Acura", "Alfa", "Audi", "Bentley", "Bmw", "Buick", "Cadillac", 
-                      "Chevrolet", "Chrysler", "Dodge", "Fiat", "Fisker", "Ford", 
-                      "Genesis", "Gmc", "Honda", "Hyundai", "Ineos", "Infiniti", 
-                      "Jaguar", "Jeep", "Kia", "Land", "Lexus", "Lincoln", "Maserati", 
-                      "Mazda", "Mercedes-Benz", "Mini", "Mitsubishi", "Nissan", 
-                      "Polestar", "Porsche", "Rivian", "Subaru", "Tesla", "Toyota", 
-                      "Vinfast", "Volkswagen", "Volvo"
+                      "Acura",         "Alfa",          "Audi",          "Bmw",           "Buick",         "Cadillac",      "Chevrolet",     "Chrysler",      "Dodge",         "Ford",         
+                      "Genesis",       "Gmc",           "Honda",         "Hyundai",       "Infiniti",      "Jaguar",        "Jeep",          "Kia",           "Land",          "Lexus",        
+                      "Lincoln",       "Maserati",      "Mazda",         "Mercedes-Benz", "Mini",          "Mitsubishi",    "Nissan",        "Porsche",       "Subaru",        "Tesla",        
+                      "Toyota",        "Volkswagen",    "Volvo"
                     ),
                     selected = "Toyota"
                   )
@@ -235,6 +375,8 @@ upload_shiny_app <- function() {
             )
           )
         ),
+        
+        br(), 
         
         # Main panel with plots side by side
         fluidRow(
@@ -286,7 +428,9 @@ upload_shiny_app <- function() {
                     min = 1,
                     max = 25,
                     value = 5,
-                    step = 1
+                    step = NULL,  # Set to NULL to use ticks
+                    ticks = TRUE,
+                    animate = FALSE
                   ),
                   helpText("~100 cars per page. Each page adds ~10 seconds of run time.")
                 ),
