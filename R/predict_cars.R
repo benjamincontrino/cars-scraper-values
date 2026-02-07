@@ -87,7 +87,11 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
           Sys.sleep(retry * 2)
         } else {
           warning("Failed after ", max_retries, " attempts")
-          return(all_cars)
+          if (nrow(all_cars) > 0) {
+            return(all_cars)
+          } else {
+            return(NULL)
+          }
         }
       }
     }
@@ -109,8 +113,8 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
         html_node("body") %>% 
         html_text()
       
-      # Look for "10,000+ matches" or similar
-      matches_pattern <- str_extract(total_matches_text, "[0-9,]+\\+?\\s+matches")
+      # Look for "54 vehicles" or similar - UPDATED PATTERN
+      matches_pattern <- str_extract(total_matches_text, "[0-9,]+\\+?\\s+(matches|vehicles|results|listings)")
       if (!is.na(matches_pattern)) {
         message("\n Total listings found: ", matches_pattern)
       }
@@ -146,12 +150,15 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
     }
     
     # ============================================
-    # FIND VEHICLE CARDS
+    # FIND VEHICLE CARDS - UPDATED SELECTORS
     # ============================================
     
-    # Try multiple selectors - be specific
+    # Try multiple selectors - spark-card based selectors FIRST
     selectors <- c(
-      "div.vehicle-card",
+      "spark-card[data-listing-id]",  # NEW PRIMARY SELECTOR
+      "spark-card",                    # Fallback
+      "[data-listing-id]",             # Alternative
+      "div.vehicle-card",              # Old selector (backward compatibility)
       "article[class*='vehicle']",
       "div[class*='vehicle-card']",
       "div.listing-row"
@@ -232,12 +239,13 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
         model <- NA
         
         if (!is.na(heading)) {
-          # Parse heading like "2021 Nissan Rogue SL"
-          parts <- str_match(heading, "^(\\d{4})\\s+([^\\s]+)\\s+(.+)$")
+          # Parse heading like "Used 2021 Nissan Rogue SL" or "2021 Nissan Rogue SL"
+          # UPDATED REGEX to handle Used/New/Certified prefix
+          parts <- str_match(heading, "^(Used|New|Certified)?\\s*(\\d{4})\\s+([^\\s]+)\\s+(.+)$")
           if (!is.na(parts[1,1])) {
-            year <- parts[1,2]
-            make <- parts[1,3]
-            model <- parts[1,4]
+            year <- parts[1,3]  # Note: index changed because of optional prefix
+            make <- parts[1,4]
+            model <- parts[1,5]
           }
         }
         
@@ -245,19 +253,46 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
         if (is.na(make) || is.na(model)) next
         
         # ----------------------------------------
-        # EXTRACT PRICE
+        # EXTRACT PRICE - COMPLETELY REWRITTEN
         # ----------------------------------------
         
         price <- NA
-        price_node <- car %>% html_node("[class*='primary-price'], [class*='listing-row__price']")
-        if (is.null(price_node)) {
-          price_node <- car %>% html_node("[class*='price']")
+        
+        # Method 1: Extract first price from all_text (most reliable)
+        # The actual price appears at the beginning like "$38,512 $488 40,511 mi..."
+        price_match <- str_extract(all_text, "^\\s*\\$[0-9,]+")
+        if (!is.na(price_match)) {
+          price_num <- as.numeric(gsub("[^0-9]", "", price_match))
+          # Only accept if it's a reasonable car price (>= $5,000)
+          if (!is.na(price_num) && price_num >= 5000) {
+            price <- as.character(price_num)
+          }
         }
         
-        if (!is.null(price_node)) {
-          price_text <- html_text(price_node, trim = TRUE)
-          if (!is.na(price_text)) {
-            # Extract only the first price number (ignores price drops like "+ $2,587")
+        # Method 2: Fallback to node-based extraction if Method 1 failed
+        if (is.na(price)) {
+          price_node <- car %>% html_node("[class*='primary-price']")
+          
+          if (is.null(price_node)) {
+            # Get all elements with 'price' in class and take the first substantial one
+            price_nodes <- car %>% html_nodes("[class*='price']")
+            if (length(price_nodes) > 0) {
+              for (pn in price_nodes) {
+                price_text <- html_text(pn, trim = TRUE)
+                # Extract price - must be substantial
+                temp_price <- str_extract(price_text, "\\$?[0-9,]+")
+                if (!is.na(temp_price)) {
+                  temp_price_num <- as.numeric(gsub("[^0-9]", "", temp_price))
+                  # Only accept if it's a reasonable car price (>= $5,000)
+                  if (!is.na(temp_price_num) && temp_price_num >= 5000) {
+                    price <- as.character(temp_price_num)
+                    break
+                  }
+                }
+              }
+            }
+          } else {
+            price_text <- html_text(price_node, trim = TRUE)
             price_match <- str_extract(price_text, "\\$?[0-9,]+")
             if (!is.na(price_match)) {
               price <- gsub("[^0-9]", "", price_match)
@@ -265,8 +300,8 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
           }
         }
         
-        # Skip if no price found
-        if (is.na(price)) next
+        # Skip if no valid price found
+        if (is.na(price) || as.numeric(price) < 5000) next
         
         # ----------------------------------------
         # EXTRACT MILEAGE
@@ -286,28 +321,41 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
         
         dealer_name <- NA
         dealer_location <- NA
-        dealer_node <- car %>% html_node("[class*='dealer']")
         
-        if (!is.null(dealer_node)) {
-          dealer_text <- html_text(dealer_node, trim = TRUE)
-          if (!is.na(dealer_text)) {
-            # Clean up extra whitespace
-            dealer_text <- gsub("\\s+", " ", dealer_text)
-            
-            # Extract dealer name (before opening parenthesis)
-            dealer_name_match <- str_extract(dealer_text, "^[^\\(\\n]+")
-            if (!is.na(dealer_name_match)) {
-              dealer_name <- trimws(dealer_name_match)
-            }
-            
-            # Extract location (City, ST with optional distance)
-            location_match <- str_extract(dealer_text, "[A-Za-z\\s]+,\\s*[A-Z]{2}\\s*\\([^\\)]*\\)")
-            if (is.na(location_match)) {
-              location_match <- str_extract(dealer_text, "[A-Za-z\\s]+,\\s*[A-Z]{2}")
-            }
-            if (!is.na(location_match)) {
-              dealer_location <- trimws(location_match)
-            }
+        # Clean up whitespace in all_text for pattern matching
+        all_text_clean <- gsub("\\s+", " ", all_text)
+        
+        # Extract dealer name - appears after "Good/Great/Fair Deal" and before rating (e.g., "4.4")
+        dealer_pattern <- "(?:Good Deal|Great Deal|Fair Deal|New Arrival)\\s+([A-Za-z0-9\\s&'.-]+?)\\s+\\d\\.\\d"
+        dealer_match <- str_match(all_text_clean, dealer_pattern)
+        if (!is.na(dealer_match[1,1])) {
+          dealer_name <- trimws(dealer_match[1,2])
+        }
+        
+        # If that didn't work, try alternative: text between rating and "Check Availability"
+        if (is.na(dealer_name)) {
+          # Sometimes format is different, try to find dealer after model and before location
+          alt_pattern <- paste0(model, "\\s+(.+?)\\s+\\d\\.\\d")
+          alt_match <- str_match(all_text_clean, alt_pattern)
+          if (!is.na(alt_match[1,1])) {
+            dealer_name <- trimws(alt_match[1,2])
+            # Remove any "Good Deal" or similar phrases
+            dealer_name <- gsub("(Good Deal|Great Deal|Fair Deal|New Arrival)", "", dealer_name)
+            dealer_name <- trimws(dealer_name)
+          }
+        }
+        
+        # Extract location - format: "City, ST (distance)"
+        location_pattern <- "([A-Za-z\\s]+,\\s*[A-Z]{2}\\s*\\([^\\)]+\\))"
+        location_match <- str_match(all_text_clean, location_pattern)
+        if (!is.na(location_match[1,1])) {
+          dealer_location <- trimws(location_match[1,1])
+        } else {
+          # Fallback: try without distance
+          location_pattern2 <- "([A-Za-z\\s]+,\\s*[A-Z]{2})(?=\\s|$)"
+          location_match2 <- str_match(all_text_clean, location_pattern2)
+          if (!is.na(location_match2[1,1])) {
+            dealer_location <- trimws(location_match2[1,1])
           }
         }
         
@@ -363,7 +411,7 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
   cars_data <- all_cars
   
   
-  rm(all_cars, heading_node, dealer_node, page, page_data, parts, price_node, response, car_cards, car, car_data)
+  rm(all_cars, page, page_data, response, car_cards, car, car_data)
   gc()
   # ============================================
   # CLEAN AND PROCESS DATA
@@ -435,6 +483,7 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
     
   } else {
     message("\nERROR: No data was collected. Check the website structure.")
+    return(NULL)
   }
   
   
@@ -568,7 +617,6 @@ predict_cars <- function(base_url, max_pages = 10, write_new_csv = "NO") {
   
   return(car_table)
 }
-
 
 # Your specific URL with filters
 # base_url <- "https://www.cars.com/shopping/results/?year_min=2016&list_price_min=0&list_price_max=75000&mileage_max=80000&body_style_slugs%5B%5D=suv&body_style_slugs%5B%5D=sedan&zip=28271&maximum_distance=100&sort=best_match_desc"
